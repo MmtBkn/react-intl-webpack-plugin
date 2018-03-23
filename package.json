@@ -1,6 +1,6 @@
 {
   "name": "react-intl-webpack-plugin-live-reload",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "author": "Muhammet Bakan <mmtbkn@gmail.com>",
   "description": "ReactIntlPlugin for webpack",
   "license": "MIT",

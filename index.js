@@ -1,4 +1,5 @@
 var sortBy = require('lodash.sortby');
+var outputFileName;
 
 function collapseWhitespace(str) {
   return str.replace(/[\s\n]+/g, ' ');
@@ -15,23 +16,24 @@ function ReactIntlPlugin(options) {
   if (this.options.outputFileName == null) {
     this.options.outputFileName = 'reactIntlMessages.json';
   }
+  outputFileName = this.options.outputFileName;
 }
 
-ReactIntlPlugin.prototype.apply = function (compiler) {
+ReactIntlPlugin.prototype.apply = function(compiler) {
   var messages = [];
 
-  compiler.plugin('compilation', function (compilation) {
-    compilation.plugin('normal-module-loader', function (context) {
-      context.metadataReactIntlPlugin = function (metadata) {
+  compiler.plugin('compilation', function(compilation) {
+    compilation.plugin('normal-module-loader', function(context) {
+      context.metadataReactIntlPlugin = function(metadata) {
         messages = messages.concat(metadata['react-intl'].messages);
       };
     });
   });
 
-  compiler.plugin('emit', function (compilation, callback) {
+  compiler.plugin('emit', function(compilation, callback) {
     messages = this.options.sortKeys ? sortBy(messages, 'id') : messages;
     var jsonMessages = messages.reduce(
-        function (result, m) {
+        function(result, m) {
           if (m.defaultMessage) {
             m.defaultMessage = m.defaultMessage.trim();
             if (this.options.collapseWhitespace) {
@@ -41,18 +43,18 @@ ReactIntlPlugin.prototype.apply = function (compiler) {
           }
           return result;
         }.bind(this),
-        {}
+        {},
     );
 
     var jsonString = JSON.stringify(jsonMessages, undefined, 2);
 
-    compilation.assets[this.options.outputFileName] = {
-      source: function () {
+    compilation.assets[outputFileName] = {
+      source: function() {
         return jsonString;
       },
-      size: function () {
+      size: function() {
         return jsonString.length;
-      }
+      },
     };
 
     callback();
