@@ -12,6 +12,9 @@ function ReactIntlPlugin(options) {
   if (this.options.collapseWhitespace == null) {
     this.options.collapseWhitespace = false;
   }
+  if (this.options.outputFileName == null) {
+    this.options.outputFileName = 'reactIntlMessages.json';
+  }
 }
 
 ReactIntlPlugin.prototype.apply = function (compiler) {
@@ -28,22 +31,22 @@ ReactIntlPlugin.prototype.apply = function (compiler) {
   compiler.plugin('emit', function (compilation, callback) {
     messages = this.options.sortKeys ? sortBy(messages, 'id') : messages;
     var jsonMessages = messages.reduce(
-      function (result, m) {
-        if (m.defaultMessage) {
-          m.defaultMessage = m.defaultMessage.trim();
-          if (this.options.collapseWhitespace) {
-            m.defaultMessage = collapseWhitespace(m.defaultMessage);
+        function (result, m) {
+          if (m.defaultMessage) {
+            m.defaultMessage = m.defaultMessage.trim();
+            if (this.options.collapseWhitespace) {
+              m.defaultMessage = collapseWhitespace(m.defaultMessage);
+            }
+            result[m.id] = m.defaultMessage;
           }
-          result[m.id] = m.defaultMessage;
-        }
-        return result;
-      }.bind(this),
-      {}
+          return result;
+        }.bind(this),
+        {}
     );
 
     var jsonString = JSON.stringify(jsonMessages, undefined, 2);
 
-    compilation.assets['reactIntlMessages.json'] = {
+    compilation.assets[this.options.outputFileName] = {
       source: function () {
         return jsonString;
       },
