@@ -43,7 +43,7 @@ ReactIntlPlugin.prototype.apply = function(compiler) {
           }
           return result;
         }.bind(this),
-        {},
+        {}
     );
 
     var jsonString = JSON.stringify(jsonMessages, undefined, 2);
