@@ -14,7 +14,7 @@ function ReactIntlPlugin(options) {
     this.options.collapseWhitespace = false;
   }
   if (this.options.outputFileName == null) {
-    this.options.outputFileName = 'reactIntlMessages.json';
+    this.options.outputFileName = 'en_US.json';
   }
   outputFileName = this.options.outputFileName;
 }
