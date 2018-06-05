@@ -25,7 +25,7 @@ ReactIntlPlugin.prototype.apply = function(compiler) {
   compiler.plugin('compilation', function(compilation) {
     compilation.plugin('normal-module-loader', function(context) {
       context.metadataReactIntlPlugin = function(metadata) {
-        messages = messages.concat(metadata['react-intl'].messages);
+          messages = messages.concat((metadata["react-intl"] || {}).messages || "");
       };
     });
   });
