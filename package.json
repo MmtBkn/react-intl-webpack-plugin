@@ -1,20 +1,16 @@
 {
   "name": "react-intl-webpack-plugin-live-reload",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "author": "Muhammet Bakan <mmtbkn@gmail.com>",
-  "description": "ReactIntlPlugin for webpack",
+  "description": "ReactIntlPlugin for webpack4",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/MmtBkn/react-intl-webpack-plugin-live-reload.git"
   },
-  "dependencies": {
-    "lodash.sortby": "^4.7.0"
-  },
-  "devDependencies": {
-    "babel-plugin-lodash": "^3.2.11",
-    "eslint": "^3.16.1",
-    "eslint-config-airbnb-base": "^11.1.1",
-    "eslint-plugin-import": "^2.2.0"
-  }
+    "peerDependencies": {
+        "babel-loader": ">= ^6.0.0",
+        "babel-plugin-react-intl": ">= ^2.3.0",
+        "webpack":">= ^4.0.0"
+    }
 }

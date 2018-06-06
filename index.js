@@ -1,65 +1,64 @@
-var sortBy = require('lodash.sortby');
 var outputFileName;
 
-function collapseWhitespace(str) {
-  return str.replace(/[\s\n]+/g, ' ');
-}
-
 function ReactIntlPlugin(options) {
-  this.options = options || {};
-  if (this.options.sortKeys == null) {
-    this.options.sortKeys = true;
-  }
-  if (this.options.collapseWhitespace == null) {
-    this.options.collapseWhitespace = false;
-  }
-  if (this.options.outputFileName == null) {
-    this.options.outputFileName = 'en_US.json';
-  }
-  outputFileName = this.options.outputFileName;
+    outputFileName = options.outputFileName == null ?  'en_US.json' : options.outputFileName
 }
 
-ReactIntlPlugin.prototype.apply = function(compiler) {
-  var messages = [];
+ReactIntlPlugin.prototype.apply = function (compiler) {
 
-  compiler.plugin('compilation', function(compilation) {
-    compilation.plugin('normal-module-loader', function(context) {
-      context.metadataReactIntlPlugin = function(metadata) {
-          messages = messages.concat((metadata["react-intl"] || {}).messages || "");
-      };
-    });
-  });
+    var messages = {};
 
-  compiler.plugin('emit', function(compilation, callback) {
-    messages = this.options.sortKeys ? sortBy(messages, 'id') : messages;
-    var jsonMessages = messages.reduce(
-        function(result, m) {
-          if (m.defaultMessage) {
-            m.defaultMessage = m.defaultMessage.trim();
-            if (this.options.collapseWhitespace) {
-              m.defaultMessage = collapseWhitespace(m.defaultMessage);
+    compiler.hooks.compilation.tap("ReactIntlPlugin", function(compilation) {
+        // console.log("The compiler is starting a new compilation...");
+
+        compilation.hooks.normalModuleLoader.tap("ReactIntlPlugin", function (context, module) {
+            // console.log("registering function: ", __dirname, "in loader context");
+            context["metadataReactIntlPlugin"] = function (metadata) {
+                // do something with metadata and module
+                // console.log("module:",module,"collecting metadata:", metadata);
+                messages[module.resource] = metadata["react-intl"].messages;
             }
-            result[m.id] = m.defaultMessage;
-          }
-          return result;
-        }.bind(this),
-        {}
-    );
+        })
+    })
 
-    var jsonString = JSON.stringify(jsonMessages, undefined, 2);
+    compiler.hooks.emit.tapAsync("ReactIntlPlugin", function (compilation, callback) {
+        // console.log("emitting messages");
 
-    compilation.assets[outputFileName] = {
-      source: function() {
-        return jsonString;
-      },
-      size: function() {
-        return jsonString.length;
-      },
-    };
+        // check for duplicates and flatten
+        var jsonMessages = [];
+        var idIndex = {};
+        Object.keys(messages).map(function (e) {
+            messages[e].map(function (m) {
+                if (!idIndex[m.id]) {
+                    idIndex[m.id] = e;
+                    jsonMessages.push(m);
+                } else {
+                    compilation.errors.push("ReactIntlPlugin -> duplicate id: '" + m.id + "'.Found in '" + idIndex[m.id] + "' and '" + e + "'.");
+                }
+            })
+        });
 
-    callback();
-  });
+        // order jsonString based on id (since files are under version control this makes changes easier visible)
+        jsonMessages.sort(function (a, b){
+            return ( a.id < b.id ) ? -1 : ( a.id > b.id ? 1 : 0 )
+        })
+
+        var jsonString = JSON.stringify(jsonMessages, undefined, 2);
+        // console.log("jsonString:",jsonString);
+
+        // Insert this list into the Webpack build as a new file asset:
+        compilation.assets[outputFileName] = {
+            source: function () {
+                return jsonString;
+            },
+            size: function () {
+                return jsonString.length;
+            }
+        };
+
+        callback();
+    });
 };
 
 module.exports = ReactIntlPlugin;
-module.exports.metadataContextFunctionName = 'metadataReactIntlPlugin';
+module.exports.metadataContextFunctionName = "metadataReactIntlPlugin";

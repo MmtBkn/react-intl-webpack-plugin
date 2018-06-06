@@ -29,9 +29,6 @@ This fork adds a few options for generating the JSON output:
 or
 `npm install @climate/react-intl-webpack-plugin --save-dev`
 
-- this works only with babel-loader >= 6.4.0
-- you will need also the babel plugin `babel-plugin-react-intl`
-
 webpack.config.js:
 - add the plugin
 ```javascript
