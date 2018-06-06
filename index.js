@@ -7,6 +7,7 @@ function ReactIntlPlugin(options) {
 
 ReactIntlPlugin.prototype.apply = function(compiler) {
   var messages = {};
+  var finalMessages = {};
 
   compiler.hooks.compilation.tap("ReactIntlPlugin", function(compilation) {
     // console.log("The compiler is starting a new compilation...");
@@ -30,6 +31,7 @@ ReactIntlPlugin.prototype.apply = function(compiler) {
     callback
   ) {
     // console.log("emitting messages");
+    // console.log(messages);
 
     // check for duplicates and flatten
     var jsonMessages = [];
@@ -39,6 +41,9 @@ ReactIntlPlugin.prototype.apply = function(compiler) {
         if (!idIndex[m.id]) {
           idIndex[m.id] = e;
           jsonMessages.push(m);
+
+          // add default language
+          finalMessages[m.id] = m.defaultMessage;
         } else {
           compilation.errors.push(
             "ReactIntlPlugin -> duplicate id: '" +
@@ -58,11 +63,26 @@ ReactIntlPlugin.prototype.apply = function(compiler) {
       return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
     });
 
-    var jsonString = JSON.stringify(jsonMessages, undefined, 2);
-    // console.log("jsonString:",jsonString);
+    finalMessages = sortObject(finalMessages);
 
-    // Insert this list into the Webpack build as a new file asset:
+    var jsonString = JSON.stringify(jsonMessages, undefined, 2);
+    var finalMessagesString = JSON.stringify(finalMessages, undefined, 2);
+
+    // console.log("jsonString:",jsonString);
+    // console.log(finalMessages)
+
+    // save default translation
     compilation.assets[outputFileName] = {
+      source: function() {
+        return finalMessagesString;
+      },
+      size: function() {
+        return 13;
+      }
+    };
+
+    // save messages to translate
+    compilation.assets["translateMe.json"] = {
       source: function() {
         return jsonString;
       },
@@ -74,6 +94,12 @@ ReactIntlPlugin.prototype.apply = function(compiler) {
     callback();
   });
 };
+
+function sortObject(o) {
+  return Object.keys(o)
+    .sort()
+    .reduce((r, k) => ((r[k] = o[k]), r), {});
+}
 
 module.exports = ReactIntlPlugin;
 module.exports.metadataContextFunctionName = "metadataReactIntlPlugin";
